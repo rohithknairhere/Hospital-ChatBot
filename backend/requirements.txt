@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pandas
+openpyxl
+python-multipart
+sqlalchemy
+scikit-learn
+prophet
+fuzzywuzzy
+python-Levenshtein
+pdfplumber
+pydantic
+apscheduler
+python-dotenv

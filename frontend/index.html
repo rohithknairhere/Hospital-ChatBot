@@ -1,0 +1,4374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amrita Intelligence - Revenue Leakage & Audit Portal</title>
+    
+    <!-- Google Fonts: Inter for UI, Fraunces for beautiful Editorial Headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Recharts and Peer Dependencies -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/classnames@2.5.1/index.js"></script>
+    <script src="https://unpkg.com/react-is@18.2.0/umd/react-is.production.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+    <!-- Fuse.js -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+
+    <!-- html-to-image CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+
+    <!-- jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Tailwind CSS with Isolated Preflight configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+
+    
+
+    
+    <script>
+        window.addEventListener('error', function(event) {
+            console.error(event);
+            const errDiv = document.getElementById('runtime-error-toast');
+            if (errDiv) {
+                errDiv.innerText = "Runtime Error: " + event.message;
+                errDiv.style.display = 'block';
+                setTimeout(() => { errDiv.style.display = 'none'; }, 6000);
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            /* Theme 1: Delhi Night (Default Dark Mode) */
+            --background: #1A1B26;
+            --card-background: #24283B;
+            --border: #2D3A5E;
+            
+            --text-primary: #A9B1D6;
+            --text-secondary: #787C99;
+            --text-muted: #565F89;
+            --text-on-accent: #FFFFFF;
+            
+            --accent: #7AA2F7;
+            --accent-hover: #569FDF;
+            --accent-light: rgba(122, 162, 247, 0.1);
+            
+            --success: #9ECE6A;
+            --warning: #E0AF68;
+            --danger: #F7768E;
+            
+            --shadow: rgba(0, 0, 0, 0.25);
+            --font-heading: 'Fraunces', serif;
+            --font-body: 'Inter', sans-serif;
+            --transition-speed: 0.25s;
+        }
+
+        [data-theme="light"] {
+            /* Theme 2: Bone Theme (Light Mode) */
+            --background: #FDF6E3;
+            --card-background: #FFFFFF;
+            --border: #E9E1C7;
+            
+            --text-primary: #073642;
+            --text-secondary: #586E75;
+            --text-muted: #93A1A1;
+            --text-on-accent: #FFFFFF;
+            
+            --accent: #CB4B16;
+            --accent-hover: #B53F11;
+            --accent-light: rgba(203, 75, 22, 0.08);
+            
+            --success: #859900;
+            --warning: #B58900;
+            --danger: #DC322F;
+            
+            --shadow: rgba(43, 40, 35, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Utility Layout Classes */
+        .app-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 260px 1fr;
+            }
+            .right-sidebar {
+                display: none !important;
+            }
+        }
+
+        /* Left Sidebar Styling */
+        .sidebar {
+            background-color: var(--card-background);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+            z-index: 20;
+            box-shadow: 2px 0 10px var(--shadow);
+        }
+
+        .sidebar-header {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .bot-toggle-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .bot-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all var(--transition-speed);
+        }
+
+        .bot-toggle-btn:hover {
+            background-color: var(--accent-light);
+            color: var(--text-primary);
+        }
+
+        .bot-toggle-btn.active {
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2);
+        }
+
+        .new-chat-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px dashed var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            margin-bottom: 24px;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--accent-light);
+            border-style: solid;
+        }
+
+        .session-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-left: 8px;
+        }
+
+        .sessions-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 24px;
+            padding-right: 4px;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: all var(--transition-speed);
+            border: 1px solid transparent;
+            text-decoration: none;
+            text-align: left;
+            background: transparent;
+            width: 100%;
+        }
+
+        .session-item:hover {
+            background-color: var(--accent-light);
+            color: var(--text-primary);
+        }
+
+        .session-item.active {
+            background-color: var(--accent-light);
+            color: var(--accent);
+            border-color: var(--accent-light);
+            font-weight: 500;
+        }
+
+        .session-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 190px;
+        }
+
+        .delete-session-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            display: none;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+
+        .session-item:hover .delete-session-btn {
+            display: block;
+        }
+
+        .delete-session-btn:hover {
+            color: var(--danger);
+            background-color: rgba(247, 118, 142, 0.1);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .logout-btn:hover {
+            background-color: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        /* Center Content Area */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--background);
+            position: relative;
+        }
+
+        /* Top Header Navigation */
+        .workspace-header {
+            height: 70px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            background-color: var(--card-background);
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-title {
+            font-family: var(--font-heading);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .command-bar-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background-color: var(--background);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            min-width: 200px;
+            justify-content: space-between;
+        }
+
+        .command-bar-trigger:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .kbd-pill {
+            background-color: var(--border);
+            color: var(--text-secondary);
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .theme-toggle-btn {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Sticky KPI Dashboard Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 20px 32px 10px 32px;
+            background-color: var(--background);
+            z-index: 5;
+            border-bottom: 1px solid rgba(45, 58, 94, 0.1);
+        }
+
+        .kpi-tile {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .kpi-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent);
+            opacity: 0.8;
+        }
+
+        .kpi-tile:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 16px var(--shadow);
+        }
+
+        .kpi-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-family: var(--font-heading);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 8px;
+        }
+
+        .kpi-desc {
+            font-size: 11px;
+            color: var(--accent);
+            margin-top: 4px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Chat Feed Workspace */
+        .chat-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-user {
+            align-self: flex-end;
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2);
+        }
+
+        .message-bot {
+            align-self: flex-start;
+            background-color: var(--card-background);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+
+        .message-bot p {
+            white-space: pre-wrap;
+        }
+
+        /* Autocomplete Panel & Input styling */
+        .interaction-container {
+            padding: 20px 32px;
+            background-color: var(--background);
+            position: relative;
+        }
+
+        .autocomplete-popup {
+            position: absolute;
+            bottom: 85px;
+            left: 32px;
+            right: 32px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 24px var(--shadow);
+            z-index: 30;
+            max-height: 250px;
+            overflow-y: auto;
+            animation: popupSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes popupSlide {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .autocomplete-row {
+            padding: 12px 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 1px solid rgba(45, 58, 94, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .autocomplete-row:hover {
+            background-color: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .input-bar-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .chat-input {
+            width: 100%;
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 16px 60px 16px 24px;
+            border-radius: 30px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            outline: none;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px var(--accent-light);
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .send-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .send-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Right Sidebar Panel styling */
+        .right-sidebar {
+            background-color: var(--card-background);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: -2px 0 10px var(--shadow);
+        }
+
+        .right-sidebar-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .filter-select {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 13px;
+            cursor: pointer;
+            transition: border-color var(--transition-speed);
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent);
+        }
+
+        .date-picker-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .date-picker-input {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 12px;
+        }
+
+        /* Premium Drag and Drop Upload Area */
+        .upload-dropzone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--background);
+            transition: all var(--transition-speed);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .upload-dropzone:hover {
+            border-color: var(--accent);
+            background-color: var(--accent-light);
+        }
+
+        .upload-icon {
+            color: var(--accent);
+            width: 32px;
+            height: 32px;
+        }
+
+        .upload-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Recharts visual styles */
+        .recharts-responsive-container {
+            margin-top: 16px;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .chart-loading-fallback {
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ⌘K Command Palette Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(10, 11, 18, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: overlayFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes overlayFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .command-palette {
+            background: rgba(24, 28, 47, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 620px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: paletteSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes paletteSlide {
+            from { opacity: 0; transform: translateY(24px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .palette-search-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 12px;
+        }
+
+        .palette-search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #FFFFFF;
+            font-family: var(--font-body);
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .palette-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .palette-close-hint {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            background-color: rgba(255, 255, 255, 0.08);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .palette-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .palette-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .palette-item:hover, .palette-item.selected {
+            background-color: rgba(122, 162, 247, 0.15);
+            color: #7AA2F7;
+            transform: translateX(4px);
+        }
+
+        .palette-item-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .palette-item-icon {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+        }
+
+        .palette-item-shortcut {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.06);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Shimmer Screen Skeleton Loading */
+        .skeleton-msg-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 60%;
+            margin-bottom: 16px;
+            align-self: flex-start;
+        }
+
+        .skeleton-item {
+            background: linear-gradient(90deg, 
+                var(--card-background) 25%, 
+                var(--border) 50%, 
+                var(--card-background) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .skeleton-line {
+            height: 16px;
+            width: 100%;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        .skeleton-line.mid {
+            width: 85%;
+        }
+
+        .skeleton-chart-box {
+            height: 180px;
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        /* Empty States Space layout */
+        .empty-state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .empty-state-illustration {
+            width: 140px;
+            height: 140px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            opacity: 0.8;
+            stroke: var(--accent);
+            fill: none;
+        }
+
+        .empty-state-title {
+            font-family: var(--font-heading);
+            font-size: 26px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .empty-state-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .empty-state-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .example-query-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .example-query-card:hover {
+            border-color: var(--accent);
+            background-color: var(--accent-light);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* Login Screen Premium layout */
+        .login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: var(--background);
+            position: relative;
+        }
+
+        .login-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 12px 30px var(--shadow);
+            text-align: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .login-logo {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .login-subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .login-error {
+            background-color: rgba(247, 118, 142, 0.15);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            border: 1px solid var(--danger);
+        }
+
+        .login-input {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 14px;
+            transition: all var(--transition-speed);
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .login-btn {
+            width: 100%;
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2);
+        }
+
+        .login-btn:hover {
+            background-color: var(--accent-hover);
+        
+        /* Global Toast Error Indicator */
+        .toast-error-indicator {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--danger);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        /* Audit Logs Compliance styles */
+        .audit-logs-view {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            background-color: var(--background);
+        }
+
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audit-view-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .audit-view-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .audit-download-btn {
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .audit-download-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .audit-filters-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr;
+            gap: 12px;
+            background-color: var(--card-background);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .audit-filter-input, .audit-filter-select {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 13px;
+            width: 100%;
+            transition: border-color var(--transition-speed);
+        }
+
+        .audit-filter-input:focus, .audit-filter-select:focus {
+            border-color: var(--accent);
+        }
+
+        .audit-table-wrapper {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px var(--shadow);
+            overflow-x: auto;
+            flex: 1;
+        }
+
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .audit-table th {
+            background-color: rgba(45, 58, 94, 0.1);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .audit-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .audit-table tbody tr {
+            transition: background-color var(--transition-speed);
+        }
+
+        .audit-table tbody tr:hover {
+            background-color: var(--accent-light);
+        }
+
+        .audit-td-time {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .audit-td-user {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .audit-td-ip {
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+
+        .audit-td-session {
+            font-family: monospace;
+            color: var(--text-muted);
+        }
+
+        .audit-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-login {
+            background-color: rgba(158, 206, 106, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-login-failed {
+            background-color: rgba(247, 118, 142, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .badge-logout {
+            background-color: rgba(247, 118, 142, 0.15);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .badge-query {
+            background-color: rgba(122, 162, 247, 0.15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .badge-pdf {
+            background-color: rgba(224, 175, 104, 0.15);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .badge-excel {
+            background-color: rgba(158, 206, 106, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-upload {
+            background-color: rgba(187, 154, 247, 0.15);
+            color: #BB9AF7;
+            border: 1px solid #BB9AF7;
+        }
+
+        .badge-filter {
+            background-color: rgba(45, 58, 94, 0.2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .badge-drilldown {
+            background-color: rgba(122, 162, 247, 0.1);
+            color: var(--accent);
+            border: 1px dashed var(--accent);
+        }
+
+        .badge-default {
+            background-color: rgba(45, 58, 94, 0.1);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .audit-inspect-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .audit-inspect-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background-color: var(--accent-light);
+        }
+
+        .audit-loading, .audit-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--text-secondary);
+            font-style: italic;
+            gap: 12px;
+        }
+
+        /* Audit Inspect Modal specifics */
+        .audit-modal-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: popupSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .audit-modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audit-modal-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .audit-modal-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .audit-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+
+        .audit-modal-close:hover {
+            color: var(--danger);
+        }
+
+        .audit-modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .audit-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(45, 58, 94, 0.1);
+        }
+
+        .audit-detail-row strong {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .audit-detail-json-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .audit-detail-json {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+        }
+
+        /* --- Alerting System Premium Styles --- */
+        .notification-bell-btn {
+            position: relative;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .notification-bell-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background-color: var(--danger);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 2px 8px rgba(247, 118, 142, 0.4);
+            animation: pulseAlert 2s infinite;
+        }
+
+        @keyframes pulseAlert {
+            0% { box-shadow: 0 0 0 0 rgba(247, 118, 142, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(247, 118, 142, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(247, 118, 142, 0); }
+        }
+
+        .notification-panel {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 360px;
+            background: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px var(--shadow);
+            z-index: 100;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 420px;
+            animation: popupSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .notification-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(45, 58, 94, 0.15);
+        }
+
+        .notification-panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notification-panel-clear {
+            font-size: 11px;
+            color: var(--accent);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .notification-panel-clear:hover {
+            color: var(--accent-hover);
+        }
+
+        .notification-list {
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(45, 58, 94, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+            text-align: left;
+        }
+
+        .notification-item:hover {
+            background-color: var(--accent-light);
+        }
+
+        .notification-item.unread {
+            background-color: rgba(122, 162, 247, 0.04);
+            border-left: 3px solid var(--accent);
+        }
+
+        .notification-item-title {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notification-item-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: var(--text-secondary);
+        }
+
+        .notification-item-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .notification-empty {
+            padding: 32px 16px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Alerts Management View */
+        .alerts-view {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            background-color: var(--background);
+        }
+
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .alert-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 10px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 200px;
+            position: relative;
+            transition: all var(--transition-speed);
+        }
+
+        .alert-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .alert-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .alert-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 80%;
+        }
+
+        .alert-card-body {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .alert-card-condition {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .alert-card-threshold {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: var(--font-heading);
+        }
+
+        .alert-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(45, 58, 94, 0.08);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .alert-card-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .alert-card-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color var(--transition-speed);
+        }
+
+        .alert-card-btn:hover {
+            color: var(--accent);
+        }
+
+        .alert-card-btn.delete:hover {
+            color: var(--danger);
+        }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Modal Dialog / Form layout */
+        .alert-modal-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: popupSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .alert-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .alert-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .alert-form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .alert-form-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .alert-form-input, .alert-form-select {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 13px;
+            width: 100%;
+            transition: border-color var(--transition-speed);
+        }
+
+        .alert-form-input:focus, .alert-form-select:focus {
+            border-color: var(--accent);
+        }
+
+        /* Test Dry Run Viewer */
+        .dry-run-panel {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .dry-run-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .dry-run-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(45, 58, 94, 0.05);
+        }
+
+        .dry-run-row span.triggered {
+            color: var(--danger);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- React Mounting Target Root -->
+    <div id="root"></div>
+
+    <!-- Error Toast Notification element -->
+    <div id="runtime-error-toast" class="toast-error-indicator"></div>
+
+    <!-- Main JS Bundle -->
+    <script type="text/babel">
+// Inject premium cursor and follow-up suggestion styles dynamically
+if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulseCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .streaming-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 15px;
+            background-color: var(--accent);
+            margin-left: 4px;
+            vertical-align: middle;
+            animation: pulseCursor 0.8s infinite;
+        }
+        .follow-up-suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            animation: fadeIn 0.3s ease forwards;
+            align-self: flex-start;
+        }
+        .follow-up-chip {
+            background-color: var(--accent-light);
+            color: var(--accent);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+        .follow-up-chip:hover {
+            background-color: var(--accent);
+            color: var(--text-on-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(122, 162, 247, 0.25);
+            border-color: transparent;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+const { useState, useEffect, useRef } = React;
+const RechartsComponents = window.Recharts || {};
+const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = RechartsComponents;
+
+const API_BASE = 'http://localhost:8000';
+
+// Custom SVG Illustrations for Empty States
+function EmptyIllustration() {
+    return (
+        <svg className="empty-state-illustration" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M12 8v4" />
+            <path d="M12 16h.01" />
+            <path d="M12 3a9 9 0 0 1 9 9a9 9 0 0 1 -9 9a9 9 0 0 1 -9 -9a9 9 0 0 1 9 -9z" />
+        </svg>
+    );
+}
+
+// Shimmer Skeleton Screen Component
+function SkeletonLoader() {
+    return (
+        <div className="skeleton-msg-wrapper">
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+                <div className="skeleton-item skeleton-avatar"></div>
+                <div className="skeleton-item skeleton-line short" style={{ height: '12px' }}></div>
+            </div>
+            <div className="skeleton-item skeleton-line"></div>
+            <div className="skeleton-item skeleton-line mid"></div>
+            <div className="skeleton-item skeleton-line short"></div>
+            <div className="skeleton-item skeleton-chart-box"></div>
+        </div>
+    );
+}
+
+// Login Screen Component
+function Login({ onLogin }) {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            const res = await fetch(`${API_BASE}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Invalid credentials');
+            }
+            const data = await res.json();
+            onLogin(data);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    return (
+        <div className="login-wrapper">
+            <div className="login-card">
+                <div className="login-logo">Amrita Guard</div>
+                <div className="login-subtext">Enterprise Revenue Leakage & Audit Center</div>
+                
+                {error && <div className="login-error">{error}</div>}
+                
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <input 
+                        className="login-input" 
+                        type="text" 
+                        placeholder="Username" 
+                        value={username} 
+                        onChange={e => setUsername(e.target.value)} 
+                        required 
+                    />
+                    <input 
+                        className="login-input" 
+                        type="password" 
+                        placeholder="Password" 
+                        value={password} 
+                        onChange={e => setPassword(e.target.value)} 
+                        required 
+                    />
+                    <button type="submit" className="login-btn">
+                        Authenticate
+                    </button>
+                </form>
+                
+                <div style={{ marginTop: '24px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    <strong>Access Hints:</strong><br/>
+                    Admin / Admin (Revenue & Audit)<br/>
+                    Admin1 / Admin1 (Revenue Only)<br/>
+                    Admin2 / Admin2 (Audit Only)
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// CommandPalette Component (Linear/Superhuman Style)
+function CommandPalette({ 
+    isOpen, 
+    onClose, 
+    bot, 
+    setBot, 
+    user, 
+    filters, 
+    setFilters, 
+    handleSend, 
+    loadSession, 
+    theme, 
+    toggleTheme, 
+    handleNewChat, 
+    onLogout, 
+    messages 
+}) {
+    const [query, setQuery] = useState('');
+    const [suggestions, setSuggestions] = useState({ departments: [], surgeons: [], sessions: [] });
+    const [results, setResults] = useState([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const fuseRef = useRef(null);
+
+    // Fetch dynamic options from backend suggestions endpoint
+    useEffect(() => {
+        if (!isOpen) return;
+        
+        fetch(`${API_BASE}/api/search-suggestions?username=${encodeURIComponent(user?.username || '')}`)
+            .then(res => res.json())
+            .then(data => {
+                setSuggestions(data);
+                
+                const searchItems = [];
+                
+                // 1. Static Commands
+                searchItems.push(
+                    { type: 'command', name: 'Switch to Revenue bot', actionType: 'switch-bot', value: 'revenue', icon: '💰' },
+                    { type: 'command', name: 'Switch to Audit bot', actionType: 'switch-bot', value: 'audit', icon: '🏥' },
+                    { type: 'command', name: 'Clear filters', actionType: 'clear-filters', icon: '🧹' },
+                    { type: 'command', name: 'Export last response as PDF', actionType: 'export-pdf', icon: '📄' },
+                    { type: 'command', name: 'Toggle Color Theme', actionType: 'toggle-theme', icon: '🌓' },
+                    { type: 'command', name: 'Start a New Chat Session', actionType: 'new-chat', icon: '💬' },
+                    { type: 'command', name: 'Sign Out of Portal', actionType: 'logout', icon: '🚪' }
+                );
+
+                // 2. Date ranges
+                searchItems.push(
+                    { type: 'date', name: 'Filter by date: last month', value: 'last month', icon: '📅' },
+                    { type: 'date', name: 'Filter by date: Q3', value: 'Q3', icon: '📅' }
+                );
+
+                // 3. Departments
+                if (data.departments) {
+                    data.departments.forEach(dept => {
+                        searchItems.push({
+                            type: 'department',
+                            name: `Filter by department: ${dept}`,
+                            value: dept,
+                            icon: '🏢'
+                        });
+                    });
+                }
+
+                // 4. Surgeons
+                if (data.surgeons) {
+                    data.surgeons.forEach(surgeon => {
+                        searchItems.push({
+                            type: 'surgeon',
+                            name: `Show leakage for ${surgeon}`,
+                            value: surgeon,
+                            icon: '🧑‍⚕️'
+                        });
+                    });
+                }
+
+                // 5. Chat Sessions
+                if (data.sessions) {
+                    data.sessions.forEach(session => {
+                        searchItems.push({
+                            type: 'session',
+                            name: `Switch to chat: ${session.title}`,
+                            value: session.session_id,
+                            bot: session.bot,
+                            icon: '💬'
+                        });
+                    });
+                }
+
+                // Initialize Fuse
+                const fuseOptions = {
+                    keys: ['name', 'value'],
+                    threshold: 0.35,
+                    distance: 100
+                };
+                
+                fuseRef.current = new window.Fuse(searchItems, fuseOptions);
+                setResults(searchItems);
+            })
+            .catch(err => {
+                console.error("Error fetching suggestions:", err);
+            });
+    }, [isOpen, user]);
+
+    // Handle query filtering
+    useEffect(() => {
+        if (!fuseRef.current) return;
+        
+        if (!query.trim()) {
+            setResults(fuseRef.current._docs);
+            setSelectedIndex(0);
+            return;
+        }
+
+        const fuseResults = fuseRef.current.search(query);
+        setResults(fuseResults.map(r => r.item));
+        setSelectedIndex(0);
+    }, [query]);
+
+    // Keyboard navigation
+    const handleKeyDown = (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelectedIndex(prev => (results.length > 0 ? (prev + 1) % results.length : 0));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelectedIndex(prev => (results.length > 0 ? (prev - 1 + results.length) % results.length : 0));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (results[selectedIndex]) {
+                handleItemSelect(results[selectedIndex]);
+            }
+        }
+    };
+
+    // Export last response as PDF
+    const exportLastResponseAsPdf = () => {
+        const botMessages = messages[bot]?.filter(m => m.role === 'bot') || [];
+        if (botMessages.length === 0) {
+            alert("No response found in active chat to export as PDF.");
+            return;
+        }
+        const lastMsg = botMessages[botMessages.length - 1];
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(`Amrita Guard Audit Summary`, 14, 20);
+        
+        doc.setFontSize(11);
+        doc.setFont("Helvetica", "normal");
+        doc.text(`Bot Type: ${bot === 'revenue' ? 'Revenue Leakage Bot' : 'Surgery Audit Bot'}`, 14, 26);
+        doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 31);
+        doc.line(14, 34, 196, 34);
+        
+        const splitText = doc.splitTextToSize(lastMsg.text, 182);
+        doc.text(splitText, 14, 42);
+        
+        // Log PDF export event
+        fetch(`${API_BASE}/export/pdf?username=${encodeURIComponent(user.username)}`, { method: 'POST' }).catch(console.error);
+        
+        doc.save(`Amrita_Guard_Export_${Date.now()}.pdf`);
+    };
+
+    // Dynamic date calculations
+    const getDateRange = (rangeType) => {
+        const now = new Date(2026, 4, 26); // May 26, 2026
+        const currentYear = now.getFullYear();
+        if (rangeType === 'last month') {
+            const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+            
+            const pad = (n) => String(n).padStart(2, '0');
+            const start = `${prevMonth.getFullYear()}-${pad(prevMonth.getMonth() + 1)}-01`;
+            const end = `${lastDayOfPrevMonth.getFullYear()}-${pad(lastDayOfPrevMonth.getMonth() + 1)}-${pad(lastDayOfPrevMonth.getDate())}`;
+            return { start, end };
+        } else if (rangeType === 'Q3') {
+            return { start: `${currentYear}-07-01`, end: `${currentYear}-09-30` };
+        }
+        return { start: '', end: '' };
+    };
+
+    // Action Execution
+    const handleItemSelect = (item) => {
+        onClose();
+        
+        if (item.type === 'command') {
+            switch (item.actionType) {
+                case 'switch-bot':
+                    setBot(item.value);
+                    break;
+                case 'clear-filters':
+                    setFilters({ period: 'all', start: '', end: '', location: '' });
+                    break;
+                case 'export-pdf':
+                    exportLastResponseAsPdf();
+                    break;
+                case 'toggle-theme':
+                    toggleTheme();
+                    break;
+                case 'new-chat':
+                    handleNewChat();
+                    break;
+                case 'logout':
+                    onLogout();
+                    break;
+                default:
+                    break;
+            }
+        } else if (item.type === 'date') {
+            const { start, end } = getDateRange(item.value);
+            setFilters({
+                ...filters,
+                period: 'custom',
+                start,
+                end
+            });
+        } else if (item.type === 'department') {
+            setFilters({
+                ...filters,
+                location: item.value
+            });
+        } else if (item.type === 'surgeon') {
+            setBot('audit');
+            handleSend(`Show leakage for ${item.value}`, null, 'audit');
+        } else if (item.type === 'session') {
+            setBot(item.bot);
+            loadSession(item.value);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="command-palette" onClick={e => e.stopPropagation()}>
+                <div className="palette-search-wrapper">
+                    <span style={{ fontSize: '18px', color: 'rgba(255, 255, 255, 0.4)', display: 'flex', alignItems: 'center' }}>🔍</span>
+                    <input 
+                        type="text"
+                        className="palette-search-input"
+                        placeholder="Search commands, departments, surgeons, sessions..."
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        autoFocus
+                    />
+                    <span className="palette-close-hint">esc</span>
+                </div>
+                <div className="palette-list">
+                    {results.map((item, idx) => (
+                        <button 
+                            key={idx}
+                            className={`palette-item ${idx === selectedIndex ? 'selected' : ''}`}
+                            onClick={() => handleItemSelect(item)}
+                            onMouseEnter={() => setSelectedIndex(idx)}
+                        >
+                            <div className="palette-item-left">
+                                <span className="palette-item-icon">{item.icon}</span>
+                                <span>{item.name}</span>
+                            </div>
+                            <span className="palette-item-shortcut">⏎</span>
+                        </button>
+                    ))}
+                    {results.length === 0 && (
+                        <div style={{ padding: '24px 16px', fontStyle: 'italic', fontSize: '13px', color: 'rgba(255, 255, 255, 0.4)', textAlign: 'center' }}>
+                            No matches found for "{query}"
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// AuditLogsView Component (Admin Only compliance page)
+function AuditLogsView({ user, API_BASE }) {
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [userFilter, setUserFilter] = useState('');
+    const [actionFilter, setActionFilter] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [selectedLog, setSelectedLog] = useState(null); // for inspect modal
+
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            let url = `${API_BASE}/audit-logs?username=${encodeURIComponent(user.username)}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+            if (userFilter) url += `&user_filter=${encodeURIComponent(userFilter)}`;
+            if (actionFilter) url += `&action_filter=${encodeURIComponent(actionFilter)}`;
+            if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
+            if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
+
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to fetch logs");
+            const data = await res.json();
+            setLogs(data.logs || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLogs();
+    }, [search, userFilter, actionFilter, startDate, endDate]);
+
+    const handleDownloadCsv = () => {
+        let url = `${API_BASE}/audit-logs/export?username=${encodeURIComponent(user.username)}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (userFilter) url += `&user_filter=${encodeURIComponent(userFilter)}`;
+        if (actionFilter) url += `&action_filter=${encodeURIComponent(actionFilter)}`;
+        if (startDate) url += `&start_date=${encodeURIComponent(startDate)}`;
+        if (endDate) url += `&end_date=${encodeURIComponent(endDate)}`;
+        
+        window.open(url, '_blank');
+    };
+
+    const getActionBadgeClass = (action) => {
+        switch (action) {
+            case 'LOGIN': return 'badge-login';
+            case 'LOGIN_FAILED': return 'badge-login-failed';
+            case 'LOGOUT': return 'badge-logout';
+            case 'QUERY_SUBMITTED': return 'badge-query';
+            case 'EXPORT_PDF': return 'badge-pdf';
+            case 'EXPORT_EXCEL': return 'badge-excel';
+            case 'FILE_UPLOAD': return 'badge-upload';
+            case 'FILTER_CHANGED': return 'badge-filter';
+            case 'CHART_DRILLDOWN': return 'badge-drilldown';
+            default: return 'badge-default';
+        }
+    };
+
+    return (
+        <div className="audit-logs-view">
+            <div className="audit-header">
+                <div>
+                    <h3 className="audit-view-title">Compliance Audit Registry</h3>
+                    <p className="audit-view-subtitle">Real-time system transaction and access tracking logs</p>
+                </div>
+                <button className="audit-download-btn" onClick={handleDownloadCsv}>
+                    📥 Download CSV
+                </button>
+            </div>
+
+            {/* Filters Row */}
+            <div className="audit-filters-grid">
+                <input 
+                    type="text" 
+                    placeholder="Search logs..." 
+                    className="audit-filter-input"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                />
+                <select 
+                    className="audit-filter-select"
+                    value={userFilter}
+                    onChange={e => setUserFilter(e.target.value)}
+                >
+                    <option value="">All Users</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Admin1">Admin1</option>
+                    <option value="Admin2">Admin2</option>
+                </select>
+                <select 
+                    className="audit-filter-select"
+                    value={actionFilter}
+                    onChange={e => setActionFilter(e.target.value)}
+                >
+                    <option value="">All Actions</option>
+                    <option value="LOGIN">LOGIN</option>
+                    <option value="LOGIN_FAILED">LOGIN_FAILED</option>
+                    <option value="LOGOUT">LOGOUT</option>
+                    <option value="QUERY_SUBMITTED">QUERY_SUBMITTED</option>
+                    <option value="EXPORT_PDF">EXPORT_PDF</option>
+                    <option value="EXPORT_EXCEL">EXPORT_EXCEL</option>
+                    <option value="FILE_UPLOAD">FILE_UPLOAD</option>
+                    <option value="FILTER_CHANGED">FILTER_CHANGED</option>
+                    <option value="CHART_DRILLDOWN">CHART_DRILLDOWN</option>
+                </select>
+                <input 
+                    type="date" 
+                    className="audit-filter-input"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                />
+                <input 
+                    type="date" 
+                    className="audit-filter-input"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                />
+            </div>
+
+            {/* Table */}
+            <div className="audit-table-wrapper">
+                {loading ? (
+                    <div className="audit-loading">
+                        <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin"></div>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>Fetching audit records...</span>
+                    </div>
+                ) : logs.length === 0 ? (
+                    <div className="audit-empty">No matching compliance logs found.</div>
+                ) : (
+                    <table className="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>IP Address</th>
+                                <th>Session ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {logs.map((log) => (
+                                <tr key={log.id} onClick={() => setSelectedLog(log)} style={{ cursor: 'pointer' }}>
+                                    <td className="audit-td-time">{log.timestamp}</td>
+                                    <td className="audit-td-user">{log.user_id}</td>
+                                    <td>
+                                        <span className={`audit-badge ${getActionBadgeClass(log.action_type)}`}>
+                                            {log.action_type}
+                                        </span>
+                                    </td>
+                                    <td className="audit-td-ip">{log.ip_address || 'N/A'}</td>
+                                    <td className="audit-td-session">{log.session_id ? log.session_id.substring(0, 8) + '...' : 'N/A'}</td>
+                                    <td>
+                                        <button className="audit-inspect-btn" onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}>
+                                            Inspect
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {/* Inspect Modal */}
+            {selectedLog && (
+                <div className="modal-overlay" onClick={() => setSelectedLog(null)}>
+                    <div className="audit-modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="audit-modal-header">
+                            <div>
+                                <h4 className="audit-modal-title">Inspect Compliance Event</h4>
+                                <p className="audit-modal-subtitle">Log ID: {selectedLog.id} &bull; {selectedLog.timestamp}</p>
+                            </div>
+                            <button className="audit-modal-close" onClick={() => setSelectedLog(null)}>
+                                &times;
+                            </button>
+                        </div>
+                        <div className="audit-modal-body">
+                            <div className="audit-detail-row">
+                                <strong>User ID:</strong> <span>{selectedLog.user_id}</span>
+                            </div>
+                            <div className="audit-detail-row">
+                                <strong>Action Type:</strong> <span className={`audit-badge ${getActionBadgeClass(selectedLog.action_type)}`}>{selectedLog.action_type}</span>
+                            </div>
+                            <div className="audit-detail-row">
+                                <strong>IP Address:</strong> <span>{selectedLog.ip_address || 'N/A'}</span>
+                            </div>
+                            <div className="audit-detail-row">
+                                <strong>Session ID:</strong> <span>{selectedLog.session_id || 'N/A'}</span>
+                            </div>
+                            <div className="audit-detail-json-header">Raw Log Details (JSON)</div>
+                            <pre className="audit-detail-json">
+                                {JSON.stringify(JSON.parse(selectedLog.details), null, 2)}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// AlertsView Management Component
+function AlertsView({
+    user,
+    API_BASE,
+    locations,
+    alerts,
+    fetchAlerts,
+    alertModalOpen,
+    setAlertModalOpen,
+    currentAlert,
+    setCurrentAlert,
+    alertForm,
+    setAlertForm,
+    dryRunResults,
+    setDryRunResults,
+    dryRunLoading,
+    setDryRunLoading,
+    handleToggleAlertActive,
+    handleDeleteAlert,
+    handleSaveAlert,
+    handleDryRunAlert,
+    handleRunAlertsCheckNow
+}) {
+    const handleEditAlert = (alert) => {
+        setCurrentAlert(alert);
+        setAlertForm({
+            name: alert.name,
+            condition_type: alert.condition_type,
+            threshold: alert.threshold.toString(),
+            comparison_column: alert.comparison_column || "",
+            bot_type: alert.bot_type,
+            email_recipient: alert.email_recipient || "",
+            webhook_url: alert.webhook_url || ""
+        });
+        setDryRunResults(null);
+        setAlertModalOpen(true);
+    };
+
+    const getConditionDescription = (type, col) => {
+        switch (type) {
+            case 'total_leakage_daily':
+                return "Daily Total Revenue Leakage exceeds threshold";
+            case 'unbilled_rate':
+                return "Daily Unbilled Procedure Rate exceeds threshold";
+            case 'department_leakage':
+                return `Daily leakage in department '${col}' exceeds threshold`;
+            case 'surgery_loss':
+                return "Daily Surgery package Audit Loss exceeds threshold";
+            default:
+                return type;
+        }
+    };
+
+    return (
+        <div className="alerts-view">
+            <div className="flex justify-between items-center bg-[var(--card-background)] border border-[var(--border)] rounded-2xl p-6 shadow-lg">
+                <div>
+                    <h3 className="text-2xl font-bold font-heading text-[var(--text-primary)]">Alerting & Incident Monitors</h3>
+                    <p className="text-xs text-[var(--text-secondary)] mt-1">Configure automated checks and webhook/email notifications on clinical billing metrics</p>
+                </div>
+                <div className="flex gap-4">
+                    <button 
+                        className="py-2.5 px-5 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:text-[var(--accent)] font-semibold text-sm rounded-xl cursor-pointer transition-all flex items-center gap-2"
+                        onClick={handleRunAlertsCheckNow}
+                    >
+                        🔄 Run Checks Now
+                    </button>
+                    <button 
+                        className="py-2.5 px-5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold text-sm rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-2"
+                        onClick={() => {
+                            setCurrentAlert(null);
+                            setAlertForm({
+                                name: "",
+                                condition_type: "total_leakage_daily",
+                                threshold: "",
+                                comparison_column: "",
+                                bot_type: "revenue",
+                                email_recipient: "",
+                                webhook_url: ""
+                            });
+                            setDryRunResults(null);
+                            setAlertModalOpen(true);
+                        }}
+                    >
+                        ➕ Create Alert
+                    </button>
+                </div>
+            </div>
+
+            <div className="alerts-grid">
+                {alerts.map(alert => (
+                    <div key={alert.id} className="alert-card">
+                        <div className="alert-card-header">
+                            <div className="alert-card-title">{alert.name}</div>
+                            <label className="switch">
+                                <input 
+                                    type="checkbox" 
+                                    checked={alert.is_active === 1}
+                                    onChange={(e) => handleToggleAlertActive(alert.id, e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
+                        <div className="alert-card-body">
+                            <span className="alert-card-condition">
+                                {getConditionDescription(alert.condition_type, alert.comparison_column)}
+                            </span>
+                            <div className="flex items-baseline gap-1 mt-1">
+                                <span className="alert-card-threshold">
+                                    {alert.condition_type === 'unbilled_rate' ? '' : '₹'}{alert.threshold.toLocaleString('en-IN')}{alert.condition_type === 'unbilled_rate' ? '%' : ''}
+                                </span>
+                                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">threshold</span>
+                            </div>
+                        </div>
+                        <div className="alert-card-footer">
+                            <span className="text-[10.5px] text-[var(--text-muted)]">
+                                Created by: <strong className="text-[var(--text-secondary)]">{alert.created_by}</strong>
+                            </span>
+                            <div className="alert-card-actions">
+                                <button className="alert-card-btn" onClick={() => handleEditAlert(alert)}>Edit</button>
+                                <button className="alert-card-btn delete" onClick={() => handleDeleteAlert(alert.id)}>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {alerts.length === 0 && (
+                    <div className="col-span-full bg-[var(--card-background)] border border-[var(--border)] rounded-2xl p-12 text-center text-sm italic text-[var(--text-muted)]">
+                        No metric monitors configured. Click "Create Alert" to build one!
+                    </div>
+                )}
+            </div>
+
+            {/* CREATE / EDIT ALERT MODAL */}
+            {alertModalOpen && (
+                <div className="modal-overlay" onClick={() => setAlertModalOpen(false)}>
+                    <div className="alert-modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--card-background)]">
+                            <div>
+                                <h4 className="text-lg font-bold font-heading text-[var(--text-primary)]">
+                                    {currentAlert ? "Modify Metric Monitor" : "Configure Incident Monitor"}
+                                </h4>
+                                <p className="text-xs text-[var(--text-secondary)] mt-0.5">Build conditional triggers based on historical patterns</p>
+                            </div>
+                            <button className="text-xl text-[var(--text-secondary)] hover:text-[var(--danger)] cursor-pointer" onClick={() => setAlertModalOpen(false)}>
+                                &times;
+                            </button>
+                        </div>
+                        <form onSubmit={handleSaveAlert} className="p-6 flex flex-col gap-6 bg-[var(--card-background)]">
+                            <div className="alert-form-grid">
+                                <div className="alert-form-group full-width">
+                                    <label className="alert-form-label">Alert Monitor Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="alert-form-input" 
+                                        placeholder="E.g., High ICU daily leakage warning" 
+                                        value={alertForm.name} 
+                                        onChange={e => setAlertForm({ ...alertForm, name: e.target.value })}
+                                        required 
+                                    />
+                                </div>
+                                <div className="alert-form-group">
+                                    <label className="alert-form-label">Monitor System Bot</label>
+                                    <select 
+                                        className="alert-form-select" 
+                                        value={alertForm.bot_type} 
+                                        onChange={e => setAlertForm({ ...alertForm, bot_type: e.target.value })}
+                                    >
+                                        <option value="revenue">💰 Revenue Leakage Bot</option>
+                                        <option value="audit">🏥 Surgery Audit Bot</option>
+                                    </select>
+                                </div>
+                                <div className="alert-form-group">
+                                    <label className="alert-form-label">Trigger Condition</label>
+                                    <select 
+                                        className="alert-form-select" 
+                                        value={alertForm.condition_type} 
+                                        onChange={e => setAlertForm({ ...alertForm, condition_type: e.target.value })}
+                                    >
+                                        <option value="total_leakage_daily">Daily Total Leakage (₹)</option>
+                                        <option value="unbilled_rate">Daily Unbilled Procedure Rate (%)</option>
+                                        <option value="department_leakage">Department / Specialty daily leakage (₹)</option>
+                                        <option value="surgery_loss">Daily Surgery package Audit Loss (₹)</option>
+                                    </select>
+                                </div>
+
+                                {alertForm.condition_type === 'department_leakage' && (
+                                    <div className="alert-form-group full-width">
+                                        <label className="alert-form-label">Target Department</label>
+                                        <select 
+                                            className="alert-form-select" 
+                                            value={alertForm.comparison_column} 
+                                            onChange={e => setAlertForm({ ...alertForm, comparison_column: e.target.value })}
+                                            required
+                                        >
+                                            <option value="">-- Choose department --</option>
+                                            {locations.map((loc, idx) => (
+                                                <option key={idx} value={loc}>{loc}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="alert-form-group full-width">
+                                    <label className="alert-form-label">Threshold Limit ({alertForm.condition_type === 'unbilled_rate' ? '%' : '₹'})</label>
+                                    <input 
+                                        type="number" 
+                                        className="alert-form-input" 
+                                        placeholder={alertForm.condition_type === 'unbilled_rate' ? "E.g., 15" : "E.g., 200000"} 
+                                        value={alertForm.threshold} 
+                                        onChange={e => setAlertForm({ ...alertForm, threshold: e.target.value })}
+                                        required 
+                                    />
+                                </div>
+                                <div className="alert-form-group">
+                                    <label className="alert-form-label">Alert Email Recipient</label>
+                                    <input 
+                                        type="email" 
+                                        className="alert-form-input" 
+                                        placeholder="E.g., auditor@hospital.com" 
+                                        value={alertForm.email_recipient} 
+                                        onChange={e => setAlertForm({ ...alertForm, email_recipient: e.target.value })}
+                                    />
+                                </div>
+                                <div className="alert-form-group">
+                                    <label className="alert-form-label">Slack/Teams Webhook URL</label>
+                                    <input 
+                                        type="url" 
+                                        className="alert-form-input" 
+                                        placeholder="E.g., https://hooks.slack.com/..." 
+                                        value={alertForm.webhook_url} 
+                                        onChange={e => setAlertForm({ ...alertForm, webhook_url: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* DRY RUN SUBSECTION */}
+                            <div className="border-t border-[var(--border)] pt-4 flex flex-col gap-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">Simulation Dry-Run</span>
+                                    <button 
+                                        type="button"
+                                        className="py-1 px-3 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--accent)] text-xs font-semibold rounded-lg cursor-pointer hover:text-[var(--accent)] transition-all"
+                                        onClick={handleDryRunAlert}
+                                        disabled={!alertForm.threshold}
+                                    >
+                                        {dryRunLoading ? "Testing..." : "🔬 Simulating historical triggers"}
+                                    </button>
+                                </div>
+                                
+                                {dryRunResults && (
+                                    <div className="dry-run-panel scrollbar">
+                                        <div className="dry-run-header">
+                                            <span>Simulated Trigger Date</span>
+                                            <span>Detected Metric Value</span>
+                                        </div>
+                                        {dryRunResults.length === 0 ? (
+                                            <div className="text-center text-[11px] text-[var(--text-muted)] italic py-2">
+                                                No historical incidents would have triggered this threshold!
+                                            </div>
+                                        ) : (
+                                            dryRunResults.map((trig, idx) => (
+                                                <div key={idx} className="dry-run-row">
+                                                    <span>{trig.date}</span>
+                                                    <span className="triggered">
+                                                        {alertForm.condition_type === 'unbilled_rate' ? '' : '₹'}{trig.value.toLocaleString('en-IN')}{alertForm.condition_type === 'unbilled_rate' ? '%' : ''}
+                                                    </span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end gap-3 border-t border-[var(--border)] pt-4">
+                                <button type="button" className="py-2 px-4 bg-[var(--background)] border border-[var(--border)] hover:border-[var(--danger)] text-sm rounded-xl cursor-pointer hover:text-[var(--danger)] transition-all" onClick={() => setAlertModalOpen(false)}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="py-2 px-6 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-bold rounded-xl cursor-pointer transition-all shadow-md">
+                                    Save Monitor
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Main App Dashboard Component
+function App() {
+    // Identity & Settings States
+    const [user, setUser] = useState(null);
+    const [theme, setTheme] = useState(() => localStorage.getItem('amrita-theme') || 'dark');
+    const [bot, setBot] = useState('revenue');
+    const [kpis, setKpis] = useState({
+        total_leakage: 0,
+        unbilled_rate: 0.0,
+        top_offending_dept: 'Loading...',
+        top_offending_dept_amount: 0,
+        surgery_audit_loss: 0,
+        monthly_trend: []
+    });
+    
+    // UI Panels & Modals
+    const [commandBarOpen, setCommandBarOpen] = useState(false);
+    
+    // Alerts and Notifications state
+    const [alerts, setAlerts] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+    const [alertModalOpen, setAlertModalOpen] = useState(false);
+    const [currentAlert, setCurrentAlert] = useState(null);
+    const [alertForm, setAlertForm] = useState({
+        name: "",
+        condition_type: "total_leakage_daily",
+        threshold: "",
+        comparison_column: "",
+        bot_type: "revenue",
+        email_recipient: "",
+        webhook_url: ""
+    });
+    const [dryRunResults, setDryRunResults] = useState(null);
+    const [dryRunLoading, setDryRunLoading] = useState(false);
+
+    const fetchAlerts = async () => {
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts?username=${user.username}`);
+            const data = await res.json();
+            setAlerts(data.alerts || []);
+        } catch (e) {
+            console.error("Failed to fetch alerts:", e);
+        }
+    };
+
+    const fetchNotifications = async () => {
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/notifications?username=${user.username}`);
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+        } catch (e) {
+            console.error("Failed to fetch notifications:", e);
+        }
+    };
+
+    const fetchUnreadCount = async () => {
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/notifications/unread-count?username=${user.username}`);
+            const data = await res.json();
+            setUnreadCount(data.unread_count || 0);
+        } catch (e) {
+            console.error("Failed to fetch unread count:", e);
+        }
+    };
+
+    const handleToggleAlertActive = async (alertId, isActive) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/${alertId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: isActive ? 1 : 0 })
+            });
+            if (res.ok) fetchAlerts();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleDeleteAlert = async (alertId) => {
+        if (!confirm("Are you sure you want to delete this alert?")) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/${alertId}?username=${user.username}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) fetchAlerts();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleSaveAlert = async (e) => {
+        e.preventDefault();
+        const payload = {
+            ...alertForm,
+            threshold: parseFloat(alertForm.threshold),
+            created_by: user.username
+        };
+        if (!payload.comparison_column) delete payload.comparison_column;
+        if (!payload.email_recipient) delete payload.email_recipient;
+        if (!payload.webhook_url) delete payload.webhook_url;
+
+        try {
+            let res;
+            if (currentAlert) {
+                res = await fetch(`${API_BASE}/api/alerts/${currentAlert.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                res = await fetch(`${API_BASE}/api/alerts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+            if (res.ok) {
+                setAlertModalOpen(false);
+                setCurrentAlert(null);
+                setAlertForm({
+                    name: "",
+                    condition_type: "total_leakage_daily",
+                    threshold: "",
+                    comparison_column: "",
+                    bot_type: "revenue",
+                    email_recipient: "",
+                    webhook_url: ""
+                });
+                setDryRunResults(null);
+                fetchAlerts();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleDryRunAlert = async () => {
+        setDryRunLoading(true);
+        setDryRunResults(null);
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    condition_type: alertForm.condition_type,
+                    threshold: parseFloat(alertForm.threshold || 0),
+                    comparison_column: alertForm.comparison_column || null,
+                    bot_type: alertForm.bot_type,
+                    username: user.username
+                })
+            });
+            const data = await res.json();
+            setDryRunResults(data.triggers || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setDryRunLoading(false);
+        }
+    };
+
+    const handleRunAlertsCheckNow = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/alerts/check-now`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user.username })
+            });
+            if (res.ok) {
+                alert("Triggered manual alert check! Pulling new notifications...");
+                fetchNotifications();
+                fetchUnreadCount();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleMarkAsRead = async (notificationId) => {
+        try {
+            await fetch(`${API_BASE}/api/alerts/notifications/${notificationId}/read?username=${user.username}`, {
+                method: 'POST'
+            });
+            fetchNotifications();
+            fetchUnreadCount();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await Promise.all(notifications.filter(n => n.status === 'unread').map(n => 
+                fetch(`${API_BASE}/api/alerts/notifications/${n.id}/read?username=${user.username}`, { method: 'POST' })
+            ));
+            fetchNotifications();
+            fetchUnreadCount();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleViewNotificationDetails = (notification) => {
+        setNotificationPanelOpen(false);
+        setBot(notification.bot_type);
+        setClickedBarName(notification.triggered_at.split(' ')[0]);
+        setClickedBarQuery(notification.alert_name);
+        setDrawerOpen(true);
+        setDrawerLoading(true);
+        setDrawerTab('transactions');
+        setDrawerData(null);
+
+        const triggerDate = notification.triggered_at.split(' ')[0];
+
+        let url = `${API_BASE}/transactions?bot=${notification.bot_type}&query=`;
+        if (notification.condition_type === 'total_leakage_daily' || notification.condition_type === 'surgery_loss' || notification.condition_type === 'unbilled_rate') {
+            url += `month&value=${encodeURIComponent(triggerDate)}`;
+        } else if (notification.condition_type === 'department_leakage') {
+            url += `location&value=${encodeURIComponent(notification.comparison_column)}&start_date=${triggerDate}&end_date=${triggerDate}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                setDrawerData(data);
+            })
+            .catch(console.error)
+            .finally(() => {
+                setDrawerLoading(false);
+            });
+
+        handleMarkAsRead(notification.id);
+    };
+
+    // Alerts fetch on mount & theme pull
+    useEffect(() => {
+        if (user) {
+            fetchAlerts();
+            fetchNotifications();
+            fetchUnreadCount();
+        }
+    }, [user, bot]);
+
+    // Live unread badge count polling
+    useEffect(() => {
+        if (!user) return;
+        const interval = setInterval(() => {
+            fetchUnreadCount();
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [user]);
+
+    
+    // Core Workflow Data
+    const [messages, setMessages] = useState({ revenue: [], audit: [] });
+    const [locations, setLocations] = useState([]);
+    const [filters, setFilters] = useState({ period: 'all', start: '', end: '', location: '' });
+    const [sessions, setSessions] = useState([]);
+    const [currentSessionId, setCurrentSessionId] = useState(null);
+    const [isTyping, setIsTyping] = useState(false);
+    const [followUpSuggestions, setFollowUpSuggestions] = useState([]);
+    
+    // Input / Autocomplete States
+    const [queryInput, setQueryInput] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    
+    // Drag & Drop / Upload Progress State
+    const [dragActive, setDragActive] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({ state: 'idle', message: '' });
+
+    // Drawer States for Clicked Chart Bars
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerData, setDrawerData] = useState(null);
+    const [drawerLoading, setDrawerLoading] = useState(false);
+    const [drawerTab, setDrawerTab] = useState('transactions'); // 'transactions' | 'staff' | 'trend'
+    const [clickedBarName, setClickedBarName] = useState('');
+    const [clickedBarQuery, setClickedBarQuery] = useState('');
+
+    const chatFeedEndRef = useRef(null);
+    const debounceRef = useRef(null);
+
+    const handleLogout = async (reason = 'User clicked Sign Out') => {
+        try {
+            await fetch(`${API_BASE}/audit-logs/log`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user?.username || 'Unknown',
+                    action_type: 'LOGOUT',
+                    details: { reason }
+                })
+            });
+        } catch (e) {
+            console.error("Failed to log logout event:", e);
+        }
+        setUser(null);
+    };
+
+    // Inactivity Timeout Hook (Auto-logout after 15 minutes)
+    useEffect(() => {
+        if (!user) return;
+
+        let timeoutId;
+        const TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+
+        const triggerAutoLogout = () => {
+            handleLogout('Inactivity timeout');
+            alert("Your session has expired due to 15 minutes of inactivity. Please authenticate again.");
+        };
+
+        const resetTimer = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(triggerAutoLogout, TIMEOUT_DURATION);
+        };
+
+        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        events.forEach(e => window.addEventListener(e, resetTimer));
+
+        resetTimer();
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            events.forEach(e => window.removeEventListener(e, resetTimer));
+        };
+    }, [user]);
+
+    // Live Filter Change Ingestion Tracking
+    const isInitialFilterRef = useRef(true);
+    useEffect(() => {
+        if (!user) return;
+        if (isInitialFilterRef.current) {
+            isInitialFilterRef.current = false;
+            return;
+        }
+
+        fetch(`${API_BASE}/audit-logs/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: user.username,
+                action_type: 'FILTER_CHANGED',
+                details: {
+                    period: filters.period,
+                    start: filters.start,
+                    end: filters.end,
+                    location: filters.location
+                }
+            })
+        }).catch(err => console.error("Failed to log filter change:", err));
+    }, [filters]);
+
+    // Initial theme attribute hook
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('amrita-theme', theme);
+    }, [theme]);
+
+    // Fetch master locations
+    useEffect(() => {
+        fetch(`${API_BASE}/locations`)
+            .then(r => r.json())
+            .then(data => setLocations(data.locations || []))
+            .catch(console.error);
+    }, []);
+
+    // Fetch real-time dashboard KPIs on mount and every 30 seconds
+    useEffect(() => {
+        const fetchKpis = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard/kpis`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setKpis(data);
+                }
+            } catch (err) {
+                console.error("Error fetching KPIs:", err);
+            }
+        };
+        fetchKpis();
+        const interval = setInterval(fetchKpis, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Active Bot or User updates trigger session pulls
+    useEffect(() => {
+        if (user) {
+            fetchSessions(bot);
+            setCurrentSessionId(null);
+            setMessages(prev => ({ ...prev, [bot]: [] }));
+            setFollowUpSuggestions([]);
+        }
+    }, [bot, user]);
+
+    // Scroll to bottom on new messages or typing state changes
+    useEffect(() => {
+        if (chatFeedEndRef.current) {
+            chatFeedEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isTyping]);
+
+    // Autocomplete Trigger hook
+    useEffect(() => {
+        if (!queryInput.trim()) {
+            setSuggestions([]);
+            return;
+        }
+        
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        
+        debounceRef.current = setTimeout(() => {
+            fetchSuggestions(queryInput);
+        }, 250);
+    }, [queryInput, bot]);
+
+    // Global Key Listener for ⌘K Command Palette
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setCommandBarOpen(prev => !prev);
+            }
+            if (e.key === 'Escape') {
+                setCommandBarOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const toggleTheme = () => {
+        setTheme(t => t === 'dark' ? 'light' : 'dark');
+    };
+
+    const fetchSessions = async (activeBot) => {
+        if (!user) return;
+        try {
+            const res = await fetch(`${API_BASE}/sessions/${activeBot}?username=${user.username}`);
+            const data = await res.json();
+            setSessions(data.sessions || []);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const loadSession = async (sessionId) => {
+        try {
+            const res = await fetch(`${API_BASE}/history/${sessionId}`);
+            const data = await res.json();
+            setCurrentSessionId(sessionId);
+            setMessages(prev => ({ ...prev, [bot]: data.messages || [] }));
+            setFollowUpSuggestions([]);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleNewChat = () => {
+        setCurrentSessionId(null);
+        setMessages(prev => ({ ...prev, [bot]: [] }));
+        setFollowUpSuggestions([]);
+        fetchSessions(bot);
+    };
+
+    const addMessage = (botName, msg) => {
+        setMessages(prev => ({
+            ...prev,
+            [botName]: [...prev[botName], msg]
+        }));
+    };
+
+    const handleSend = async (queryText, locationFilter = null, overrideBot = null) => {
+        if (!queryText.trim()) return;
+
+        const activeBot = overrideBot || bot;
+
+        // Clear existing suggestions
+        setFollowUpSuggestions([]);
+
+        addMessage(activeBot, { role: 'user', text: queryText });
+        
+        // Add a placeholder streaming bot message that we can append tokens to
+        addMessage(activeBot, { role: 'bot', text: '', streaming: true });
+        
+        setQueryInput('');
+        setShowSuggestions(false);
+        setIsTyping(false); // Turn off generic typing spinner since streaming is inline
+
+        const targetLocation = locationFilter || filters.location || null;
+
+        try {
+            const res = await fetch(`${API_BASE}/chat/stream/${activeBot}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: queryText,
+                    bot: activeBot,
+                    username: user.username,
+                    session_id: currentSessionId,
+                    start_date: filters.start || null,
+                    end_date: filters.end || null,
+                    location_filter: targetLocation
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error("HTTP error " + res.status);
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+            let fullText = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop(); // Save last incomplete line to buffer
+
+                for (const line of lines) {
+                    const cleaned = line.trim();
+                    if (cleaned.startsWith("data: ")) {
+                        const dataStr = cleaned.slice(6).trim();
+                        if (dataStr) {
+                            try {
+                                const payload = JSON.parse(dataStr);
+                                if (payload.done) {
+                                    // Update streaming message with final answer, charts and done status
+                                    setMessages(prev => {
+                                        const botMsgs = [...prev[activeBot]];
+                                        const lastIdx = botMsgs.length - 1;
+                                        if (lastIdx >= 0 && botMsgs[lastIdx].role === 'bot') {
+                                            botMsgs[lastIdx] = {
+                                                ...botMsgs[lastIdx],
+                                                text: fullText,
+                                                chart: payload.chart_data,
+                                                chartType: payload.chart_type,
+                                                chartValueType: payload.chart_value_type,
+                                                streaming: false
+                                            };
+                                        }
+                                        return { ...prev, [activeBot]: botMsgs };
+                                    });
+
+                                    if (!currentSessionId && payload.session_id) {
+                                        setCurrentSessionId(payload.session_id);
+                                        fetchSessions(activeBot);
+                                    }
+
+                                    if (payload.follow_up_suggestions) {
+                                        setFollowUpSuggestions(payload.follow_up_suggestions);
+                                    }
+                                } else if (payload.text) {
+                                    fullText += payload.text;
+                                    setMessages(prev => {
+                                        const botMsgs = [...prev[activeBot]];
+                                        const lastIdx = botMsgs.length - 1;
+                                        if (lastIdx >= 0 && botMsgs[lastIdx].role === 'bot') {
+                                            botMsgs[lastIdx] = {
+                                                ...botMsgs[lastIdx],
+                                                text: fullText
+                                            };
+                                        }
+                                        return { ...prev, [activeBot]: botMsgs };
+                                    });
+                                }
+                            } catch (e) {
+                                console.error("Error parsing stream chunk:", e);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Stream reader failed:", e);
+            setMessages(prev => {
+                const botMsgs = [...prev[activeBot]];
+                const lastIdx = botMsgs.length - 1;
+                if (lastIdx >= 0 && botMsgs[lastIdx].role === 'bot') {
+                    botMsgs[lastIdx] = {
+                        role: 'bot',
+                        text: 'Error connecting to the server. Please verify API is running and streaming is active.',
+                        streaming: false
+                    };
+                }
+                return { ...prev, [activeBot]: botMsgs };
+            });
+        }
+    };
+
+    const fetchSuggestions = async (q) => {
+        try {
+            const res = await fetch(`${API_BASE}/autocomplete?q=${encodeURIComponent(q)}&bot=${bot}`);
+            const data = await res.json();
+            setSuggestions(data.suggestions || []);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleSelectSuggestion = (suggestion) => {
+        // Extract location if injected (e.g. "Which floor... - ICU")
+        let loc = null;
+        if (suggestion.includes('- ')) {
+            const parts = suggestion.split('- ');
+            loc = parts[parts.length - 1].replace('?', '').trim();
+        }
+        handleSend(suggestion, loc);
+    };
+
+    // File Ingestion Handler
+    const handleFileUpload = async (file) => {
+        if (!file) return;
+        setUploadProgress({ state: 'loading', message: `Uploading ${file.name}...` });
+        
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+            const res = await fetch(`${API_BASE}/upload?username=${encodeURIComponent(user.username)}`, { 
+                method: 'POST', 
+                body: fd 
+            });
+            if (!res.ok) throw new Error("Server rejected file upload");
+            setUploadProgress({ state: 'success', message: `${file.name} ingested successfully!` });
+            setTimeout(() => setUploadProgress({ state: 'idle', message: '' }), 5000);
+        } catch (err) {
+            setUploadProgress({ state: 'error', message: 'Ingestion failed. Try Excel/PDF files.' });
+            setTimeout(() => setUploadProgress({ state: 'idle', message: '' }), 5000);
+        }
+    };
+
+    // Drag and Drop listeners
+    const handleDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    };
+
+
+
+    // Handler when a user clicks a bar on any BarChart
+    const handleBarClick = async (entry, msg) => {
+        if (!entry || !entry.name) return;
+        
+        setClickedBarName(entry.name);
+        setClickedBarQuery(msg.text);
+        
+        // Log chart drilldown action for compliance
+        fetch(`${API_BASE}/audit-logs/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: user.username,
+                action_type: 'CHART_DRILLDOWN',
+                details: {
+                    bar_name: entry.name,
+                    query: msg.text,
+                    active_filters: filters
+                }
+            })
+        }).catch(err => console.error("Failed to log chart drilldown:", err));
+        setDrawerOpen(true);
+        setDrawerLoading(true);
+        setDrawerTab('transactions');
+        setDrawerData(null);
+        
+        try {
+            const url = `${API_BASE}/transactions?bot=${bot}&query=${encodeURIComponent(msg.text)}&value=${encodeURIComponent(entry.name)}&start_date=${filters.start || ''}&end_date=${filters.end || ''}&location_filter=${filters.location || ''}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to fetch transaction details");
+            const data = await res.json();
+            setDrawerData(data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setDrawerLoading(false);
+        }
+    };
+
+    // Prefills chat text box and highlights it
+    const handleAskAboutThis = () => {
+        setDrawerOpen(false);
+        const question = `Tell me more about ${clickedBarName} leakage`;
+        setQueryInput(question);
+        
+        setTimeout(() => {
+            const inputEl = document.querySelector('.chat-input');
+            if (inputEl) {
+                inputEl.focus();
+            }
+        }, 100);
+    };
+
+    const formatCompactCurrency = (val) => {
+        if (val >= 10000000) {
+            return '₹' + (val / 10000000).toFixed(2) + ' Cr';
+        } else if (val >= 100000) {
+            return '₹' + (val / 100000).toFixed(2) + ' L';
+        }
+        return '₹' + Math.round(val).toLocaleString('en-IN');
+    };
+
+    const handleTileClick = (tileType) => {
+        if (tileType === 'total_leakage') {
+            setBot('revenue');
+            handleSend("What is the total revenue leakage and breakdown by service?", null, 'revenue');
+        } else if (tileType === 'unbilled_rate') {
+            setBot('revenue');
+            handleSend("What is the average unbilled rate and percentage?", null, 'revenue');
+        } else if (tileType === 'top_offending_dept') {
+            const dept = kpis.top_offending_dept;
+            const isSurgerySpeciality = dept.toLowerCase().includes('surgery') || 
+                                        dept.toLowerCase().includes('cardio') || 
+                                        dept.toLowerCase().includes('ortho') || 
+                                        dept.toLowerCase().includes('urology') || 
+                                        dept.toLowerCase().includes('ent') || 
+                                        dept.toLowerCase().includes('obg');
+            const targetBot = isSurgerySpeciality ? 'audit' : 'revenue';
+            setBot(targetBot);
+            handleSend(`Show me detailed leakage breakdown for ${dept}`, null, targetBot);
+        } else if (tileType === 'surgery_audit_loss') {
+            setBot('audit');
+            handleSend("What is the total surgery audit loss?", null, 'audit');
+        }
+    };
+
+    // Client-side CSV Download Exporter
+    const exportToCsv = (data, filename) => {
+        if (!data || data.length === 0) return;
+        const headers = ['Date', 'Patient ID', 'Item Name', 'Amount (INR)', 'Staff/Surgeon', 'Location/Speciality'];
+        const rows = data.map(t => [
+            t.date,
+            t.patient_id,
+            t.service_name || '',
+            t.leakage_amount || 0,
+            t.staff_name || '',
+            t.location || ''
+        ]);
+        
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Client-side Chart-to-PNG Exporter using html-to-image
+    const exportChartAsPng = (e, index) => {
+        e.stopPropagation();
+        const container = e.currentTarget.closest('.recharts-responsive-container');
+        if (!container) return;
+        
+        const btn = container.querySelector('.chart-export-btn');
+        if (btn) btn.style.display = 'none';
+        
+        window.htmlToImage.toPng(container, {
+            backgroundColor: theme === 'dark' ? '#1A1B26' : '#FDF6E3',
+            style: {
+                padding: '12px',
+                borderRadius: '12px'
+            }
+        })
+        .then((dataUrl) => {
+            if (btn) btn.style.display = 'flex';
+            const link = document.createElement('a');
+            link.download = `chart_${bot}_${index + 1}.png`;
+            link.href = dataUrl;
+            link.click();
+        })
+        .catch((error) => {
+            if (btn) btn.style.display = 'flex';
+            console.error('oops, something went wrong with chart export!', error);
+        });
+    };
+
+    if (!user) {
+        return <Login onLogin={u => {
+            setUser(u);
+            if (u.bots && u.bots.length > 0) setBot(u.bots[0]);
+        }} />;
+    }
+
+    // Colors mapping to active state variables for Recharts theme adaptation
+    const isDark = theme === 'dark';
+    const chartAccentColor = isDark ? '#7AA2F7' : '#CB4B16';
+    const chartGridColor = isDark ? '#2D3A5E' : '#E9E1C7';
+    const chartTextColor = isDark ? '#787C99' : '#586E75';
+
+
+
+    // Contextual Quick-Start suggestions based on bot
+    const emptyQueries = bot === 'revenue' ? [
+        { title: "Service Leakage Areas", q: "Which services or charges are most frequently missed in billing?" },
+        { title: "Highest Leakage Department", q: "Which floor or department has the highest revenue leakage?" },
+        { title: "Monthly Trends Breakdown", q: "Which month or time period shows the highest revenue leakage trends?" },
+        { title: "Staff Underbilling Patterns", q: "Which staff members are linked to the most unbilled charges?" }
+    ] : [
+        { title: "Total Audit Discrepancies", q: "What is the total surgery audit loss and discrepancies?" },
+        { title: "Speciality Discrepancy Splits", q: "Show the top surgical specialty losses in audit logs" },
+        { title: "Highest Discrepancy Doctors", q: "Which surgeons or doctors are linked to the worst surgery package discrepancies?" },
+        { title: "Timeline Discrepancies", q: "Show monthly surgery package audit losses and trends" }
+    ];
+
+    return (
+        <div className="app-container" style={{ gridTemplateColumns: (bot === 'audit_logs' || bot === 'alerts') ? '280px 1fr' : undefined }}>
+            {/* COLUMN 1: LEFT SIDEBAR */}
+            <aside className="sidebar">
+                <div className="sidebar-header">
+                    <h1 className="sidebar-title">Amrita Guard</h1>
+                    <div className="sidebar-subtitle">Analytics Control Room</div>
+                </div>
+
+                <div className="bot-toggle-group">
+                    {user.bots.includes('revenue') && (
+                        <button 
+                            className={`bot-toggle-btn ${bot === 'revenue' ? 'active' : ''}`}
+                            onClick={() => setBot('revenue')}
+                        >
+                            <span>💰</span> Revenue Leakage
+                        </button>
+                    )}
+                    {user.bots.includes('audit') && (
+                        <button 
+                            className={`bot-toggle-btn ${bot === 'audit' ? 'active' : ''}`}
+                            onClick={() => setBot('audit')}
+                        >
+                            <span>🏥</span> Surgery Audit
+                        </button>
+                    )}
+                    {user.username === 'Admin' && (
+                        <button 
+                            className={`bot-toggle-btn ${bot === 'audit_logs' ? 'active' : ''}`}
+                            onClick={() => setBot('audit_logs')}
+                        >
+                            <span>📋</span> Audit Compliance
+                        </button>
+                    )}
+                    {user.username === 'Admin' && (
+                        <button 
+                            className={`bot-toggle-btn ${bot === 'alerts' ? 'active' : ''}`}
+                            onClick={() => setBot('alerts')}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+                        >
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>🚨 Alerts Management</span>
+                            {unreadCount > 0 && (
+                                <span style={{
+                                    backgroundColor: 'var(--danger)',
+                                    color: 'white',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    borderRadius: '50%',
+                                    padding: '2px 6px',
+                                    lineHeight: '1'
+                                }}>
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
+                </div>
+
+
+                <button className="new-chat-btn" onClick={handleNewChat}>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    New Consultation
+                </button>
+
+                <div className="session-section-title">Consultations</div>
+                <div className="sessions-list">
+                    {sessions.map(s => (
+                        <button 
+                            key={s.session_id}
+                            className={`session-item ${currentSessionId === s.session_id ? 'active' : ''}`}
+                            onClick={() => loadSession(s.session_id)}
+                        >
+                            <span className="session-title">{s.title || "Consultation Details"}</span>
+                        </button>
+                    ))}
+                    {sessions.length === 0 && (
+                        <div style={{ padding: '12px', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>
+                            No prior histories
+                        </div>
+                    )}
+                </div>
+
+                <footer className="sidebar-footer">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px 8px 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }}></div>
+                        <span style={{ fontWeight: '500' }}>Active: {user.username}</span>
+                    </div>
+                    <button className="logout-btn" onClick={() => handleLogout()}>
+                        Sign Out
+                    </button>
+                </footer>
+            </aside>
+
+            {/* COLUMN 2: WORKSPACE & INTERACTIVE CHAT AREA */}
+            <main className="workspace">
+                {/* Top Nav Header */}
+                <header className="workspace-header">
+                    <div className="header-left">
+                        <h2 className="header-title">
+                            {bot === 'revenue' ? 'Revenue Leakage Control' : bot === 'audit' ? 'Surgery Audit Registry' : bot === 'alerts' ? 'Alerts Management Dashboard' : 'Audit Compliance Registry'}
+                        </h2>
+                        <div className="header-meta">
+                            {bot === 'alerts' ? 'Automated Incident Monitors' : bot === 'audit_logs' ? 'Compliance Operations' : currentSessionId ? `Session ID: ${currentSessionId}` : 'New Workspace Consultation'}
+                        </div>
+                    </div>
+
+                    <div className="header-actions">
+                        {user.username === 'Admin' && (
+                            <div style={{ position: 'relative' }}>
+                                <button className="notification-bell-btn" onClick={() => setNotificationPanelOpen(!notificationPanelOpen)} title="Alert Notifications">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                                    </svg>
+                                    {unreadCount > 0 && (
+                                        <span className="bell-badge">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                                {notificationPanelOpen && (
+                                    <div className="notification-panel">
+                                        <div className="notification-panel-header">
+                                            <span className="notification-panel-title">System Alerts</span>
+                                            <button className="notification-panel-clear" onClick={handleMarkAllAsRead}>
+                                                Mark all read
+                                            </button>
+                                        </div>
+                                        <div className="notification-list">
+                                            {notifications.length === 0 ? (
+                                                <div className="notification-empty">No active notifications</div>
+                                            ) : (
+                                                notifications.map(n => (
+                                                    <div 
+                                                        key={n.id} 
+                                                        className={`notification-item ${n.status === 'unread' ? 'unread' : ''}`}
+                                                        onClick={() => handleViewNotificationDetails(n)}
+                                                    >
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <span className="notification-item-title">{n.alert_name}</span>
+                                                            <span style={{
+                                                                fontSize: '9px',
+                                                                fontWeight: 'bold',
+                                                                textTransform: 'uppercase',
+                                                                color: n.bot_type === 'revenue' ? 'var(--accent)' : 'var(--warning)',
+                                                                backgroundColor: 'rgba(45, 58, 94, 0.2)',
+                                                                padding: '2px 6px',
+                                                                borderRadius: '4px'
+                                                            }}>
+                                                                {n.bot_type}
+                                                            </span>
+                                                        </div>
+                                                        <span className="notification-item-desc">
+                                                            Value detected: <strong style={{ color: 'var(--danger)' }}>
+                                                                {n.condition_type === 'unbilled_rate' ? '' : '₹'}{n.value_detected.toLocaleString('en-IN')}{n.condition_type === 'unbilled_rate' ? '%' : ''}
+                                                            </strong> (Threshold: {n.condition_type === 'unbilled_rate' ? '' : '₹'}{n.threshold.toLocaleString('en-IN')}{n.condition_type === 'unbilled_rate' ? '%' : ''})
+                                                        </span>
+                                                        <div className="notification-item-meta">
+                                                            <span>Target Date: {n.triggered_at.split(' ')[0]}</span>
+                                                            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>View Details &rarr;</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <button className="command-bar-trigger" onClick={() => setCommandBarOpen(true)}>
+                            <span>Search actions...</span>
+                            <span className="kbd-pill">⌘K</span>
+                        </button>
+                        <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme (Delhi Night / Bone Theme)">
+
+                            {isDark ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                            )}
+                        </button>
+                    </div>
+                </header>
+
+                {bot === 'audit_logs' ? (
+                    <AuditLogsView user={user} API_BASE={API_BASE} />
+                ) : bot === 'alerts' ? (
+                    <AlertsView 
+                        user={user}
+                        API_BASE={API_BASE}
+                        locations={locations}
+                        alerts={alerts}
+                        fetchAlerts={fetchAlerts}
+                        alertModalOpen={alertModalOpen}
+                        setAlertModalOpen={setAlertModalOpen}
+                        currentAlert={currentAlert}
+                        setCurrentAlert={setCurrentAlert}
+                        alertForm={alertForm}
+                        setAlertForm={setAlertForm}
+                        dryRunResults={dryRunResults}
+                        setDryRunResults={setDryRunResults}
+                        dryRunLoading={dryRunLoading}
+                        setDryRunLoading={setDryRunLoading}
+                        handleToggleAlertActive={handleToggleAlertActive}
+                        handleDeleteAlert={handleDeleteAlert}
+                        handleSaveAlert={handleSaveAlert}
+                        handleDryRunAlert={handleDryRunAlert}
+                        handleRunAlertsCheckNow={handleRunAlertsCheckNow}
+                    />
+                ) : (
+
+                    <>
+                        {/* Sticky KPI Row */}
+                        <section className="kpi-row">
+                    <div className="kpi-tile" onClick={() => handleTileClick('total_leakage')}>
+                        <div className="kpi-title">Total Leakage (₹)</div>
+                        <div className="kpi-value">{formatCompactCurrency(kpis.total_leakage)}</div>
+                        <div className="kpi-desc"><span>⚠️</span> Critical billing misses</div>
+                    </div>
+                    <div className="kpi-tile" onClick={() => handleTileClick('unbilled_rate')}>
+                        <div className="kpi-title">Unbilled Rate (%)</div>
+                        <div className="kpi-value">{kpis.unbilled_rate.toFixed(1)}%</div>
+                        <div className="kpi-desc"><span>📉</span> Unbilled charges ratio</div>
+                    </div>
+                    <div className="kpi-tile" onClick={() => handleTileClick('top_offending_dept')}>
+                        <div className="kpi-title">Top Offending Dept</div>
+                        <div className="kpi-value" style={{ fontSize: kpis.top_offending_dept.length > 15 ? '16px' : '22px', transition: 'all 0.3s ease' }}>
+                            {kpis.top_offending_dept}
+                        </div>
+                        <div className="kpi-desc"><span>🔴</span> {formatCompactCurrency(kpis.top_offending_dept_amount)} leakage</div>
+                    </div>
+                    <div className="kpi-tile" onClick={() => handleTileClick('surgery_audit_loss')}>
+                        <div className="kpi-title">Surgery Audit Loss (₹)</div>
+                        <div className="kpi-value">{formatCompactCurrency(kpis.surgery_audit_loss)}</div>
+                        <div className="kpi-desc"><span>🏥</span> HIS-scheduler gap</div>
+                    </div>
+                </section>
+
+                {/* Interactive Message Feed */}
+                <section className="chat-feed">
+                    {messages[bot].length === 0 ? (
+                        <div className="empty-state-container">
+                            <EmptyIllustration />
+                            <h3 className="empty-state-title">Consultation Workspace</h3>
+                            <p className="empty-state-subtitle">
+                                Initiate analytical audits of billing logs or surgery registry entries. Choose one of our recommended queries below to start.
+                            </p>
+                            <div className="empty-state-grid">
+                                {emptyQueries.map((item, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className="example-query-card"
+                                        onClick={() => handleSend(item.q)}
+                                    >
+                                        <div style={{ fontWeight: '600', color: 'var(--accent)', marginBottom: '4px' }}>{item.title}</div>
+                                        <div>{item.q}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        messages[bot].map((msg, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`message-bubble ${msg.role === 'user' ? 'message-user' : 'message-bot'}`}
+                            >
+                                 <p>
+                                     {msg.text}
+                                     {msg.streaming && <span className="streaming-cursor">|</span>}
+                                 </p>
+                                
+                                {/* Dynamic Theme-Adaptive Recharts rendering */}
+                                {msg.chart && msg.chart.length > 0 && (
+                                    <div className="recharts-responsive-container" style={{ position: 'relative' }}>
+                                        {/* Global Export PNG overlay button */}
+                                        <button 
+                                            className="chart-export-btn absolute top-3 right-3 p-1.5 rounded-lg bg-[var(--card-background)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all z-10 flex items-center justify-center"
+                                            title="Export Chart as PNG"
+                                            onClick={(e) => exportChartAsPng(e, idx)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                            </svg>
+                                        </button>
+
+                                        <div style={{ height: '240px', width: '100%' }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={msg.chart} margin={{ top: 25, right: 10, left: 10, bottom: 5 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                                                    <XAxis 
+                                                        dataKey="name" 
+                                                        axisLine={false} 
+                                                        tickLine={false} 
+                                                        tick={{ fill: chartTextColor, fontSize: 11 }} 
+                                                    />
+                                                    <YAxis 
+                                                        width={65} 
+                                                        axisLine={false} 
+                                                        tickLine={false} 
+                                                        tick={{ fill: chartTextColor, fontSize: 11 }} 
+                                                        tickFormatter={(val) => msg.chartValueType === 'count' ? val : '₹' + Intl.NumberFormat('en-IN', { notation: "compact", compactDisplay: "short" }).format(val)} 
+                                                    />
+                                                    <Tooltip 
+                                                        cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} 
+                                                        formatter={(value) => msg.chartValueType === 'count' ? [value, 'Count'] : ['₹' + value.toLocaleString('en-IN'), 'Amount']} 
+                                                        contentStyle={{ 
+                                                            backgroundColor: 'var(--card-background)', 
+                                                            borderColor: 'var(--border)', 
+                                                            color: 'var(--text-primary)',
+                                                            borderRadius: '8px'
+                                                        }} 
+                                                    />
+                                                    <Bar 
+                                                        dataKey="leakage" 
+                                                        fill={chartAccentColor} 
+                                                        radius={[4, 4, 0, 0]}
+                                                        onClick={(entry) => handleBarClick(entry, msg)}
+                                                    >
+                                                        {msg.chart.map((entry, index) => (
+                                                            <Cell 
+                                                                key={`cell-${index}`} 
+                                                                fill={chartAccentColor} 
+                                                                style={{ cursor: 'pointer' }}
+                                                                className="hover:opacity-80 transition-opacity"
+                                                            />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                )}
+                             </div>
+                         ))
+                     )}
+
+                     {messages[bot].length > 0 && 
+                      !isTyping && 
+                      !messages[bot][messages[bot].length - 1].streaming && 
+                      followUpSuggestions.length > 0 && (
+                         <div className="follow-up-suggestions-container">
+                             {followUpSuggestions.map((item, idx) => (
+                                 <button 
+                                     key={idx} 
+                                     className="follow-up-chip"
+                                     onClick={() => handleSend(item)}
+                                 >
+                                     {item}
+                                 </button>
+                             ))}
+                         </div>
+                     )}
+                     
+                     {isTyping && <SkeletonLoader />}
+                     <div ref={chatFeedEndRef} />
+                </section>
+
+                {/* Input Workspace & Suggestions */}
+                <section className="interaction-container">
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div className="autocomplete-popup">
+                            {suggestions.map((s, i) => (
+                                <div 
+                                    key={i} 
+                                    className="autocomplete-row"
+                                    onClick={() => handleSelectSuggestion(s)}
+                                >
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: 'var(--accent)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <span>{s}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="input-bar-wrapper">
+                        <input 
+                            type="text" 
+                            className="chat-input"
+                            placeholder={`Inquire about hospital ${bot === 'revenue' ? 'revenue leakage logs' : 'surgical audit discrepancies'}...`}
+                            value={queryInput}
+                            onChange={e => setQueryInput(e.target.value)}
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 250)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' && queryInput.trim()) {
+                                    handleSend(queryInput);
+                                }
+                            }}
+                        />
+                        <button className="send-btn" onClick={() => handleSend(queryInput)} disabled={!queryInput.trim()}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </div>
+                </section>
+            </>)}
+            </main>
+
+            {/* COLUMN 3: RIGHT CONTEXT & FILTERS SIDEBAR */}
+            {bot !== 'audit_logs' && (
+                <aside className="right-sidebar">
+                <h3 className="right-sidebar-title">Analytics & Context</h3>
+
+                <div className="filter-group">
+                    <div className="filter-label">Timeline Range</div>
+                    <select 
+                        className="filter-select"
+                        value={filters.period}
+                        onChange={e => setFilters({ ...filters, period: e.target.value })}
+                    >
+                        <option value="all">All Available Records</option>
+                        <option value="1y">Past 1 Calendar Year</option>
+                        <option value="1fy">Past Financial Year</option>
+                        <option value="custom">Custom Calendar Date</option>
+                    </select>
+
+                    {filters.period === 'custom' && (
+                        <div className="date-picker-row">
+                            <input 
+                                type="date" 
+                                className="date-picker-input" 
+                                value={filters.start}
+                                onChange={e => setFilters({ ...filters, start: e.target.value })} 
+                            />
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center' }}>to</div>
+                            <input 
+                                type="date" 
+                                className="date-picker-input" 
+                                value={filters.end}
+                                onChange={e => setFilters({ ...filters, end: e.target.value })} 
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className="filter-group">
+                    <div className="filter-label">Location In-Scope</div>
+                    <select 
+                        className="filter-select"
+                        value={filters.location}
+                        onChange={e => setFilters({ ...filters, location: e.target.value })}
+                    >
+                        <option value="">All Hospital Wards</option>
+                        {locations.map((loc, idx) => (
+                            <option key={idx} value={loc}>{loc}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Dropzone File Upload Ingestion */}
+                <div 
+                    className={`upload-dropzone ${dragActive ? 'active' : ''}`}
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => document.getElementById('file-upload-input').click()}
+                >
+                    <svg className="upload-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    </svg>
+                    <span className="upload-text">Drag & drop raw reports here</span>
+                    <span className="upload-subtext">Supports PDF, XLSX or XLS formats</span>
+                    <input 
+                        id="file-upload-input" 
+                        type="file" 
+                        className="hidden" 
+                        style={{ display: 'none' }}
+                        accept=".xlsx,.xls,.pdf" 
+                        onChange={e => handleFileUpload(e.target.files[0])} 
+                    />
+                </div>
+
+                {uploadProgress.state !== 'idle' && (
+                    <div style={{ 
+                        marginTop: '12px', 
+                        padding: '10px', 
+                        borderRadius: '8px', 
+                        fontSize: '11px', 
+                        textAlign: 'center',
+                        fontWeight: '500',
+                        backgroundColor: uploadProgress.state === 'loading' ? 'var(--accent-light)' : uploadProgress.state === 'success' ? 'rgba(158, 206, 106, 0.15)' : 'rgba(247, 118, 142, 0.15)',
+                        color: uploadProgress.state === 'loading' ? 'var(--accent)' : uploadProgress.state === 'success' ? 'var(--success)' : 'var(--danger)',
+                        border: '1px solid ' + (uploadProgress.state === 'loading' ? 'var(--accent)' : uploadProgress.state === 'success' ? 'var(--success)' : 'var(--danger)')
+                    }}>
+                        {uploadProgress.message}
+                    </div>
+                )}
+
+                <div style={{ marginTop: '24px', backgroundColor: 'var(--background)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border)' }}>
+                    <div className="filter-label" style={{ marginBottom: '8px' }}>Database Health</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '4px 0' }}>
+                        <span>Server Status</span>
+                        <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>ONLINE</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', margin: '4px 0' }}>
+                        <span>Database Source</span>
+                        <span style={{ color: 'var(--accent)', fontWeight: '500' }}>SQLite</span>
+                    </div>
+                </div>
+            </aside>
+            )}
+
+            {/* GLOBAL MODAL: ⌘K COMMAND PALETTE */}
+            <CommandPalette 
+                isOpen={commandBarOpen}
+                onClose={() => setCommandBarOpen(false)}
+                bot={bot}
+                setBot={setBot}
+                user={user}
+                filters={filters}
+                setFilters={setFilters}
+                handleSend={handleSend}
+                loadSession={loadSession}
+                theme={theme}
+                toggleTheme={toggleTheme}
+                handleNewChat={handleNewChat}
+                onLogout={handleLogout}
+                messages={messages}
+            />
+
+            {/* RIGHT SIDE DRAWER FOR DETAILED TRANSACTION BREAKDOWNS */}
+            {drawerOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity flex justify-end"
+                    onClick={() => setDrawerOpen(false)}
+                >
+                    <div 
+                        className="w-full max-w-2xl h-full bg-[var(--card-background)] border-l border-[var(--border)] shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out text-[var(--text-primary)]"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Drawer Header */}
+                        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--card-background)]">
+                            <div>
+                                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+                                    Breakdown Audit Details
+                                </span>
+                                <h3 className="text-2xl font-bold font-heading mt-1 text-[var(--text-primary)]">
+                                    {clickedBarName || 'Transaction breakdown'}
+                                </h3>
+                                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                                    Analyzing leakage from: "{clickedBarQuery}"
+                                </p>
+                            </div>
+                            <button 
+                                className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer"
+                                onClick={() => setDrawerOpen(false)}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Summary Info Cards */}
+                        {drawerData && drawerData.summary && (
+                            <div className="px-6 py-4 bg-[var(--background)] border-b border-[var(--border)] grid grid-cols-3 gap-4">
+                                <div className="p-3 bg-[var(--card-background)] border border-[var(--border)] rounded-xl">
+                                    <div className="text-[10px] uppercase font-semibold text-[var(--text-muted)]">Category</div>
+                                    <div className="text-sm font-semibold capitalize text-[var(--text-primary)] mt-1">
+                                        {drawerData.summary.category || 'Details'}
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-[var(--card-background)] border border-[var(--border)] rounded-xl">
+                                    <div className="text-[10px] uppercase font-semibold text-[var(--text-muted)]">Total Leakage</div>
+                                    <div className="text-lg font-bold text-[var(--danger)] mt-0.5">
+                                        ₹{drawerData.summary.total_leakage.toLocaleString('en-IN')}
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-[var(--card-background)] border border-[var(--border)] rounded-xl">
+                                    <div className="text-[10px] uppercase font-semibold text-[var(--text-muted)]">Occurrences</div>
+                                    <div className="text-lg font-bold text-[var(--accent)] mt-0.5">
+                                        {drawerData.summary.count} cases
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tabs Navigation */}
+                        <div className="px-6 border-b border-[var(--border)] flex justify-between items-center bg-[var(--card-background)]">
+                            <div className="flex gap-4">
+                                {[
+                                    { id: 'transactions', label: 'Transactions' },
+                                    { id: 'staff', label: bot === 'revenue' ? 'By Staff' : 'By Surgeon' },
+                                    { id: 'trend', label: 'Monthly Trend' }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setDrawerTab(tab.id)}
+                                        className={`py-4 px-2 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+                                            drawerTab === tab.id
+                                                ? 'border-[var(--accent)] text-[var(--accent)] font-bold'
+                                                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 py-2">
+                                <button
+                                    onClick={() => {
+                                        if (drawerData && drawerData.transactions) {
+                                            exportToCsv(drawerData.transactions, `leakage_${clickedBarName.replace(/\s+/g, '_')}.csv`);
+                                            fetch(`${API_BASE}/export/excel?username=${encodeURIComponent(user.username)}`, { method: 'POST' }).catch(console.error);
+                                        }
+                                    }}
+                                    disabled={!drawerData || !drawerData.transactions || drawerData.transactions.length === 0}
+                                    className="py-1.5 px-3 text-xs font-semibold rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    CSV
+                                </button>
+                                <button
+                                    onClick={handleAskAboutThis}
+                                    className="py-1.5 px-3 text-xs font-semibold rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] flex items-center gap-1.5 cursor-pointer transition-all"
+                                >
+                                    <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+                                    </svg>
+                                    Ask
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 overflow-y-auto p-6 bg-[var(--background)]">
+                            {drawerLoading ? (
+                                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                                    <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin"></div>
+                                    <span className="text-xs text-[var(--text-secondary)] italic">Analyzing raw transactions...</span>
+                                </div>
+                            ) : !drawerData || (drawerTab === 'transactions' && drawerData.transactions.length === 0) ? (
+                                <div className="flex flex-col items-center justify-center h-64 text-[var(--text-muted)] italic text-sm">
+                                    No records found for "{clickedBarName}"
+                                </div>
+                            ) : (
+                                <div>
+                                    {/* TAB 1: TRANSACTIONS LIST */}
+                                    {drawerTab === 'transactions' && (
+                                        <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card-background)]">
+                                            <table className="w-full text-left border-collapse text-xs">
+                                                <thead>
+                                                    <tr className="bg-[var(--background)] border-b border-[var(--border)] text-[var(--text-muted)] font-semibold uppercase tracking-wider">
+                                                        <th className="p-3.5">Date</th>
+                                                        <th className="p-3.5">Patient ID</th>
+                                                        <th className="p-3.5">Service/Procedure</th>
+                                                        <th className="p-3.5 text-right">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-[var(--border)] text-[var(--text-primary)]">
+                                                    {drawerData.transactions.map((tx, idx) => (
+                                                        <tr key={idx} className="hover:bg-[var(--accent-light)] transition-colors">
+                                                            <td className="p-3.5 whitespace-nowrap">{tx.date}</td>
+                                                            <td className="p-3.5 font-mono">{tx.patient_id}</td>
+                                                            <td className="p-3.5 font-medium">{tx.service_name}</td>
+                                                            <td className="p-3.5 text-right font-semibold text-[var(--danger)]">
+                                                                ₹{tx.leakage_amount.toLocaleString('en-IN')}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+
+                                    {/* TAB 2: BY STAFF / SURGEON */}
+                                    {drawerTab === 'staff' && (
+                                        <div className="flex flex-col gap-4">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+                                                Leakage Distribution by Medical Staff
+                                            </h4>
+                                            {drawerData.by_staff.map((staff, idx) => {
+                                                const totalSum = drawerData.summary.total_leakage || 1;
+                                                const percentage = Math.round((staff.leakage_amount / totalSum) * 100);
+                                                return (
+                                                    <div key={idx} className="p-4 bg-[var(--card-background)] border border-[var(--border)] rounded-xl flex flex-col gap-2">
+                                                        <div className="flex justify-between items-center text-xs">
+                                                            <span className="font-semibold text-[var(--text-primary)]">
+                                                                {staff.staff_name || 'Unknown Staff'}
+                                                            </span>
+                                                            <span className="font-bold text-[var(--danger)]">
+                                                                ₹{staff.leakage_amount.toLocaleString('en-IN')} ({percentage}%)
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-[var(--background)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
+                                                            <div 
+                                                                className="bg-[var(--accent)] h-full rounded-full transition-all duration-500"
+                                                                style={{ width: `${percentage}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {drawerData.by_staff.length === 0 && (
+                                                <div className="text-center italic text-xs text-[var(--text-muted)] py-8">
+                                                    No staff breakdowns recorded
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* TAB 3: MONTHLY TREND */}
+                                    {drawerTab === 'trend' && (
+                                        <div className="flex flex-col gap-3">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+                                                Chronological Trend Breakdown
+                                            </h4>
+                                            <div className="relative border-l border-[var(--border)] ml-3 pl-6 flex flex-col gap-6">
+                                                {drawerData.monthly_trend.map((trend, idx) => (
+                                                    <div key={idx} className="relative">
+                                                        {/* Circle indicator */}
+                                                        <div className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2 border-[var(--card-background)]"></div>
+                                                        <div className="p-4 bg-[var(--card-background)] border border-[var(--border)] rounded-xl flex justify-between items-center text-xs">
+                                                            <span className="font-semibold text-[var(--text-secondary)]">
+                                                                {trend.month}
+                                                            </span>
+                                                            <span className="font-bold text-[var(--danger)]">
+                                                                ₹{trend.leakage_amount.toLocaleString('en-IN')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {drawerData.monthly_trend.length === 0 && (
+                                                <div className="text-center italic text-xs text-[var(--text-muted)] py-8">
+                                                    No trend history found
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>
