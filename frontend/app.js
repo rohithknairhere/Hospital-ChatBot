@@ -1522,11 +1522,13 @@ function App() {
 
     // Fetch master locations
     useEffect(() => {
-        fetch(`${API_BASE}/locations`)
-            .then(r => r.json())
-            .then(data => setLocations(data.locations || []))
-            .catch(console.error);
-    }, []);
+        if (user) {
+            fetch(`${API_BASE}/locations`)
+                .then(r => r.json())
+                .then(data => setLocations(data.locations || []))
+                .catch(console.error);
+        }
+    }, [user]);
 
     // Fetch real-time dashboard KPIs on mount and every 30 seconds
     useEffect(() => {

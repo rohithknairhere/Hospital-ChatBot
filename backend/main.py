@@ -710,7 +710,8 @@ def prepare_revenue_context(req: ChatRequest):
     
     df_service_copy = df_service.copy()
     df_service_copy['month'] = pd.to_datetime(df_service_copy['date'], errors='coerce').dt.to_period('M')
-    monthly_sum = df_service_copy.groupby('month')['leakage_amount'].sum().tail(5)
+    monthly_sum = df_service_copy.groupby('month')['leakage_amount'].sum()
+    # Provide the full time-range trends so calculations (averages/totals) over the timeframe are accurate
     monthly_str = {str(k): float(v) for k, v in monthly_sum.items()}
     
     unbilled_cases = len(df_service[(df_service['leakage_amount'] > 0) & (df_service['billed_qty'] == 0)])
@@ -823,7 +824,8 @@ def prepare_audit_context(req: ChatRequest):
     # Time trends
     discrepancies = discrepancies.copy()
     discrepancies['month'] = discrepancies['date_dt'].dt.to_period('M')
-    monthly_sum = discrepancies.groupby('month')['difference_amount'].sum().tail(12)
+    monthly_sum = discrepancies.groupby('month')['difference_amount'].sum()
+    # Provide the full time-range trends so calculations (averages/totals) over the timeframe are accurate
     monthly_str = {str(k): float(v) for k, v in monthly_sum.items()}
     
     recent_days = discrepancies.groupby(discrepancies['date_dt'].dt.date)['difference_amount'].sum().tail(10)
