@@ -7,9 +7,14 @@ db/
 *.db
 *.sqlite
 *.sqlite3
+!db/hospital_demo.db
 
 data/
 data/raw/
+!data/demo/
+!data/demo/*.csv
+!data/demo/*.xlsx
+!data/demo/*.pdf
 
 *.csv
 *.xls

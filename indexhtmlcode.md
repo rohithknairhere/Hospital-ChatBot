@@ -4480,6 +4480,7 @@ function App() {
                     ) : (
                         messages[bot].map((msg, idx) => renderMessageBubble(msg, idx, 'single'))
                     )}
+                </section>
 
                      {messages[bot].length > 0 && 
                       !isTyping && 
